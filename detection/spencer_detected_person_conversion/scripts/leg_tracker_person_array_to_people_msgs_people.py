@@ -29,33 +29,49 @@
 #  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 """
-Converts spencer_tracking_msgs/DetectedPersons into a geometry_msgs/PoseArray. This conversion is lossy,
+Converts leg_tracker PersonArray into people_msgs people. This conversion is lossy,
 as covariance matrix, modality, detection ID and confidence are omitted during the conversion.
 """
 
 import rospy
-from spencer_tracking_msgs.msg import DetectedPersons, DetectedPerson
+from people_msgs.msg import People
+from leg_tracker.msg import PersonArray Person
 from geometry_msgs.msg import PoseArray, Pose
+import math
+import tf
 
-def newMessageReceived(detectedPersons):
-    poseArray = PoseArray()
-    poseArray.header = detectedPersons.header
+def newMessageReceived(personArray):
+    people = People()
+    people.header = personArray.header
+    number=0
+    for personArray in personArray.people:
+        people.people.append(detectedPerson.people.pose)
+        
+        print number
+        number=number+1
+        """
+        people.people.position.x=msg.people[0].pose.position.x
+        people.people.position.y=msg.people[0].pose.position.y
+        people.people.velocity.x=math.sin(tf.transformations.euler_from_quaternion([msg.people[0].pose.orientation.x, msg.people[0].pose.orientation.y, msg.people[0].pose.orientation.z, msg.people[0].pose.orientation.w])[2]
+)
+        people.people.velocity.y=math.cos(tf.transformations.euler_from_quaternion([msg.people[0].pose.orientation.x, msg.people[0].pose.orientation.y, msg.people[0].pose.orientation.z, msg.people[0].pose.orientation.w])[2]
+)
+        people.people.tagnames=msg.people[0].id
+        people.people.tags=msg.people[0].id
+        """
 
-    for detectedPerson in detectedPersons.detections:
-        poseArray.poses.append(detectedPerson.pose.pose)
-
-    pub.publish(poseArray)
+    pub.publish(people)
 
 
 # Initialize node
-rospy.init_node("detected_persons_to_pose_array")
+rospy.init_node("leg_tracker_person_array_to_people_msgs_people")
 
 # Create publisher and subscriber
-inputTopic = rospy.resolve_name("/spencer/perception/detected_persons")
-outputTopic = rospy.resolve_name("/pose_array")
+inputTopic = rospy.resolve_name("/people_tracked")
+outputTopic = rospy.resolve_name("/people")
 
-sub = rospy.Subscriber(inputTopic, DetectedPersons, newMessageReceived, queue_size=5)
-pub = rospy.Publisher(outputTopic, PoseArray, queue_size=5)
+sub = rospy.Subscriber(inputTopic, PersonArray, newMessageReceived, queue_size=5)
+pub = rospy.Publisher(outputTopic, People, queue_size=5)
 
-rospy.loginfo("Re-publishing spencer_tracking_msgs/DetectedPersons from %s as geometry_msgs/PoseArray at %s" % (inputTopic, outputTopic) )
+rospy.loginfo("Re-publishing people_msgs_people from %s as leg_tracker_person_array at %s" % (inputTopic, outputTopic) )
 rospy.spin()
